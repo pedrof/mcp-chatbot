@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: mcp-chatbot-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/data:/app/data
+      - ./shared:/app/../shared:ro
+    environment:
+      - APP_SECRET=${APP_SECRET:-change-this-to-a-secure-random-string-at-least-32-characters-long}
+      - PORT=3000
+      - NODE_ENV=development
+      - FRONTEND_URL=http://localhost:5173
+      - DATABASE_PATH=/app/data/config.db
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: mcp-chatbot-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - ./shared:/app/../shared:ro
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  backend-data:

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mcp-chatbot-backend-prod
+    ports:
+      - "3000:3000"
+    volumes:
+      - backend-data:/app/data
+    environment:
+      - APP_SECRET=${APP_SECRET}
+      - PORT=3000
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost
+      - DATABASE_PATH=/app/data/config.db
+    restart: always
+    networks:
+      - mcp-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mcp-chatbot-frontend-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - mcp-network
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  backend-data:
