@@ -445,3 +445,6 @@ const systemMessage: Message = {
 - The app is an **MCP assistant** - system prompt enforces this context
 - Containerization is **preferred** over local Node.js installation
 - This project values **simplicity over complexity**
+
+
+

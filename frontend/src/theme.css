@@ -1,0 +1,47 @@
+:root {
+  /* Background Colors */
+  --bg-primary: #0A0E27;
+  --bg-secondary: #1A1F3A;
+  --bg-tertiary: #252B48;
+  --bg-elevated: #2D3352;
+
+  /* Accent Colors */
+  --accent-primary: #00D9FF;
+  --accent-secondary: #7B2CBF;
+  --accent-success: #39FF14;
+  --accent-warning: #FFD60A;
+  --accent-danger: #FF206E;
+
+  /* Text Colors */
+  --text-primary: #E8EBF7;
+  --text-secondary: #A6ADC8;
+  --text-tertiary: #6B7394;
+  --text-accent: #00D9FF;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(45, 51, 82, 0.6);
+  --glass-border: rgba(232, 235, 247, 0.1);
+  --glass-shadow: 0 8px 32px rgba(10, 14, 39, 0.37);
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 217, 255, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 217, 255, 0.15);
+  --shadow-lg: 0 8px 32px rgba(0, 217, 255, 0.2);
+  --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.3);
+}

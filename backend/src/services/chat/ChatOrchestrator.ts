@@ -303,12 +303,28 @@ export class ChatOrchestrator {
       throw new Error(`Invalid tool arguments: ${error.message}`)
     }
 
+    // Log the tool call details for debugging
+    console.log(`[ChatOrchestrator] Tool call details:`)
+    console.log(`  Tool: ${toolName}`)
+    console.log(`  Server: ${tool.serverId}`)
+    console.log(`  Arguments: ${JSON.stringify(args, null, 2)}`)
+
     // Execute via MCPService
-    return await this.mcpService.executeTool(
+    const result = await this.mcpService.executeTool(
       tool.serverId,
       toolName,
       args
     )
+
+    // Log the result for debugging
+    console.log(`[ChatOrchestrator] Tool result:`)
+    console.log(`  isError: ${result.isError}`)
+    console.log(`  content length: ${result.content.length}`)
+    if (result.content.length > 0) {
+      console.log(`  content[0]: ${JSON.stringify(result.content[0], null, 2)}`)
+    }
+
+    return result
   }
 
   /**

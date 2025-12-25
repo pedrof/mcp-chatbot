@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { ChatInterface } from './components/chat/ChatInterface'
 import { ConfigPanel } from './components/config/ConfigPanel'
+import { About } from './components/common/About'
 import { useHealthCheck } from './hooks/useConfig'
 import './App.css'
 
@@ -16,7 +17,7 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  const [showConfig, setShowConfig] = useState(false)
+  const [currentView, setCurrentView] = useState<'chat' | 'config' | 'about'>('chat')
   const { data: health } = useHealthCheck()
 
   return (
@@ -31,14 +32,22 @@ function AppContent() {
               <span className="status-unhealthy">● Disconnected</span>
             )}
           </div>
-          <button onClick={() => setShowConfig(!showConfig)}>
-            {showConfig ? 'Chat' : 'Settings'}
+          <button onClick={() => setCurrentView('chat')} className={currentView === 'chat' ? 'active' : ''}>
+            Chat
+          </button>
+          <button onClick={() => setCurrentView('config')} className={currentView === 'config' ? 'active' : ''}>
+            Settings
+          </button>
+          <button onClick={() => setCurrentView('about')} className={currentView === 'about' ? 'active' : ''}>
+            About
           </button>
         </div>
       </header>
 
       <main className="app-main">
-        {showConfig ? <ConfigPanel /> : <ChatInterface />}
+        {currentView === 'chat' && <ChatInterface />}
+        {currentView === 'config' && <ConfigPanel />}
+        {currentView === 'about' && <About />}
       </main>
 
       <footer className="app-footer">

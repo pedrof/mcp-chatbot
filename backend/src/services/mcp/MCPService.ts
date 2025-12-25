@@ -418,23 +418,124 @@ export class MCPService {
       throw new Error(`MCP server '${connection.serverName}' is not connected (status: ${connection.status})`)
     }
 
+    // Auto-inject today's date for Garmin health tools if date parameter is missing
+    // This fixes timezone issues where the Garmin server defaults to UTC
+    const garminDateTools = [
+      'get_daily_stats', 'get_heart_rate_data', 'get_stress_data',
+      'get_sleep_data', 'get_body_battery', 'get_steps_data'
+    ]
+    if (garminDateTools.includes(toolName)) {
+      if (!args.date_str && args.date_str !== '') {
+        // Get current date in local timezone (not UTC)
+        // The container runs in UTC, but we want the user's local date
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const todayLocal = `${year}-${month}-${day}`
+        args.date_str = todayLocal
+        console.log(`[MCPService] Auto-injected date_str="${todayLocal}" for ${toolName} (timezone fix)`)
+      }
+    }
+
     try {
+      console.log(`[MCPService] Calling tool '${toolName}' with arguments:`, JSON.stringify(args, null, 2))
+
       const result = await connection.client.callTool({
         name: toolName,
         arguments: args
       })
 
+      console.log(`[MCPService] Tool '${toolName}' raw result:`, JSON.stringify(result, null, 2))
+
+      // Validate the result structure
+      if (!result.content) {
+        console.error(`[MCPService] Tool '${toolName}' returned result without 'content' field`)
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Tool '${toolName}' returned invalid response: missing 'content' field.\n\nThe MCP server needs to return: {content: [{type: "text", text: "..."}]}`
+            }
+          ],
+          isError: true
+        }
+      }
+
+      if (!Array.isArray(result.content)) {
+        console.error(`[MCPService] Tool '${toolName}' returned non-array content:`, result.content)
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Tool '${toolName}' returned invalid response: 'content' must be an array, got ${typeof result.content}.\n\nThe MCP server needs to return: {content: [{type: "text", text: "..."}]}`
+            }
+          ],
+          isError: true
+        }
+      }
+
+      if (result.content.length === 0) {
+        console.warn(`[MCPService] Tool '${toolName}' returned empty content array`)
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Tool '${toolName}' returned no data. This could mean:\n- No data available for the requested parameters\n- The MCP server found nothing to return\n- There may be an issue with the tool implementation\n\nRequested: ${JSON.stringify(args, null, 2)}`
+            }
+          ],
+          isError: false
+        }
+      }
+
+      // Validate each content item
+      const validContent = result.content.filter((item: any) => {
+        if (!item || typeof item !== 'object') {
+          console.warn(`[MCPService] Skipping invalid content item:`, item)
+          return false
+        }
+        if (!item.type) {
+          console.warn(`[MCPService] Content item missing 'type' field:`, item)
+          return false
+        }
+        return true
+      })
+
+      if (validContent.length === 0) {
+        console.error(`[MCPService] All content items were invalid`)
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Tool '${toolName}' returned invalid content items. Each item must have a 'type' field and appropriate data.`
+            }
+          ],
+          isError: true
+        }
+      }
+
+      console.log(`[MCPService] Tool '${toolName}' returned ${validContent.length} valid content items`)
+
       return {
-        content: result.content,
-        isError: result.isError
+        content: validContent,
+        isError: result.isError || false
       }
     } catch (error: any) {
-      console.error(`Error executing tool '${toolName}' on '${connection.serverName}':`, error.message)
+      console.error(`[MCPService] Error executing tool '${toolName}' on '${connection.serverName}':`)
+      console.error(`  Error message: ${error.message}`)
+      console.error(`  Error stack: ${error.stack}`)
+
+      // Check for specific error patterns
+      let errorDetails = error.message
+      if (error.message.includes('structured_content must be a dict')) {
+        errorDetails = `The MCP server returned invalid data format. It returned a raw list [] instead of proper MCP response format.\n\nThe server should return:\n{\n  "content": [\n    {"type": "text", "text": "your data here"}\n  ]\n}\n\nOriginal error: ${error.message}`
+      }
+
       return {
         content: [
           {
             type: 'text',
-            text: `Error executing tool: ${error.message}`
+            text: `Error calling tool '${toolName}':\n\n${errorDetails}\n\n🔧 Troubleshooting:\n1. Check the MCP server logs for errors\n2. Verify the tool returns proper MCP format: {content: [...]}\n3. Ensure the tool handles empty/no data cases correctly\n4. Test the tool directly: curl -X POST http://your-server/mcp ...`
           }
         ],
         isError: true
