@@ -67,7 +67,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
   border-bottom: 1px solid var(--glass-border);
   box-shadow: var(--shadow-md);
@@ -101,7 +101,7 @@ body::before {
 }
 
 .app-logo {
-  height: 50px;
+  height: 40px;
   width: auto;
   /* Futuristic glow effect with transparent background */
   --glow-size-primary: 15px;
@@ -248,7 +248,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--glass-border);
 }
@@ -301,7 +301,7 @@ body::before {
 .message-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
