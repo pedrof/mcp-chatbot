@@ -1002,19 +1002,19 @@ form button[type="submit"]:disabled {
    ============================================ */
 
 .app-footer {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   background: var(--bg-secondary);
   border-top: 1px solid var(--glass-border);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 
 .footer-logo {
-  height: 30px;
+  height: 20px;
   width: auto;
   filter: brightness(1.1) drop-shadow(0 0 10px rgba(0, 217, 255, 0.4));
   transition: all var(--transition-fast);
