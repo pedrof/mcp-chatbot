@@ -12,6 +12,7 @@ import { ChatAPI } from './api/chat.js'
 import { ConfigAPI } from './api/config.js'
 import { HealthAPI } from './api/health.js'
 import { MCPAPI } from './api/mcp.js'
+import { DiscoveryAPI } from './api/discovery.js'
 
 // Load environment variables
 dotenvConfig()
@@ -44,6 +45,7 @@ const chatAPI = new ChatAPI(llmService, mcpService)
 const configAPI = new ConfigAPI(configService, llmService, mcpService)
 const healthAPI = new HealthAPI(llmService, configService, mcpService)
 const mcpAPI = new MCPAPI(mcpService)
+const discoveryAPI = new DiscoveryAPI(mcpService)
 
 // Create Express app
 const app = express()
@@ -75,6 +77,15 @@ app.patch('/api/config/mcp/:id/toggle', (req, res) => configAPI.toggleMCPServer(
 app.get('/api/mcp/tools', (req, res) => mcpAPI.getTools(req, res))
 app.get('/api/mcp/status', (req, res) => mcpAPI.getStatus(req, res))
 app.post('/api/mcp/servers/:id/reconnect', (req, res) => mcpAPI.reconnectServer(req, res))
+
+app.get('/api/discovery/catalog', (req, res) => discoveryAPI.getCatalog(req, res))
+app.get('/api/discovery/catalog/:id', (req, res) => discoveryAPI.getServerTemplate(req, res))
+app.get('/api/discovery/catalog/category/:category', (req, res) => discoveryAPI.getServersByCategory(req, res))
+app.get('/api/discovery/catalog/search', (req, res) => discoveryAPI.searchCatalog(req, res))
+app.get('/api/discovery/tools', (req, res) => discoveryAPI.getAvailableTools(req, res))
+app.get('/api/discovery/tools/:serverId', (req, res) => discoveryAPI.getToolsByServer(req, res))
+app.post('/api/discovery/tools/:serverId/:toolName/test', (req, res) => discoveryAPI.testTool(req, res))
+app.get('/api/discovery/status', (req, res) => discoveryAPI.getDiscoveryStatus(req, res))
 
 app.post('/api/chat', (req, res) => chatAPI.chat(req, res))
 

@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { ChatInterface } from './components/chat/ChatInterface'
 import { ConfigPanel } from './components/config/ConfigPanel'
 import { About } from './components/common/About'
+import { ToolDiscoveryPanel } from './components/discovery/ToolDiscoveryPanel'
 import { useHealthCheck } from './hooks/useConfig'
 import './App.css'
 
@@ -17,7 +18,7 @@ const queryClient = new QueryClient({
 })
 
 function AppContent() {
-  const [currentView, setCurrentView] = useState<'chat' | 'config' | 'about'>('chat')
+  const [currentView, setCurrentView] = useState<'chat' | 'config' | 'discovery' | 'about'>('chat')
   const { data: health } = useHealthCheck()
 
   return (
@@ -38,6 +39,9 @@ function AppContent() {
           <button onClick={() => setCurrentView('chat')} className={currentView === 'chat' ? 'active' : ''}>
             Chat
           </button>
+          <button onClick={() => setCurrentView('discovery')} className={currentView === 'discovery' ? 'active' : ''}>
+            Discovery
+          </button>
           <button onClick={() => setCurrentView('config')} className={currentView === 'config' ? 'active' : ''}>
             Settings
           </button>
@@ -50,6 +54,9 @@ function AppContent() {
       <main className="app-main">
         <div style={{ display: currentView === 'chat' ? 'flex' : 'none', width: '100%', height: '100%', flexDirection: 'column' }}>
           <ChatInterface />
+        </div>
+        <div style={{ display: currentView === 'discovery' ? 'flex' : 'none', width: '100%', height: '100%', flexDirection: 'column' }}>
+          <ToolDiscoveryPanel />
         </div>
         <div style={{ display: currentView === 'config' ? 'flex' : 'none', width: '100%', height: '100%', flexDirection: 'column' }}>
           <ConfigPanel />
