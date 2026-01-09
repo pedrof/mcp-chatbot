@@ -9,10 +9,10 @@ export class Repository {
   ) {}
 
   // LLM Config Operations
-  getLLMConfig(): LLMConfig | null {
+  getLLMConfig(userId: number): LLMConfig | null {
     const row = this.db
-      .prepare('SELECT * FROM llm_config WHERE id = 1')
-      .get() as any
+      .prepare('SELECT * FROM llm_config WHERE user_id = ?')
+      .get(userId) as any
 
     if (!row) return null
 
@@ -31,16 +31,16 @@ export class Repository {
     }
   }
 
-  saveLLMConfig(config: LLMConfig): void {
+  saveLLMConfig(userId: number, config: LLMConfig): void {
     const apiKeyEncrypted = config.apiKey
       ? this.encryption.encrypt(config.apiKey)
       : null
 
     const stmt = this.db.prepare(`
-      INSERT INTO llm_config (id, base_url, api_key_encrypted, model, temperature, max_tokens,
+      INSERT INTO llm_config (user_id, base_url, api_key_encrypted, model, temperature, max_tokens,
                               top_p, presence_penalty, frequency_penalty, system_prompt, updated_at)
-      VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(id) DO UPDATE SET
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(user_id) DO UPDATE SET
         base_url = excluded.base_url,
         api_key_encrypted = excluded.api_key_encrypted,
         model = excluded.model,
@@ -54,6 +54,7 @@ export class Repository {
     `)
 
     stmt.run(
+      userId,
       config.baseURL,
       apiKeyEncrypted,
       config.model,
@@ -78,40 +79,41 @@ export class Repository {
     }
   }
 
-  getAllMCPServers(): MCPServerConfig[] {
+  getAllMCPServers(userId: number): MCPServerConfig[] {
     const rows = this.db
-      .prepare('SELECT * FROM mcp_servers ORDER BY created_at DESC')
-      .all() as any[]
+      .prepare('SELECT * FROM mcp_servers WHERE user_id = ? ORDER BY created_at DESC')
+      .all(userId) as any[]
 
     return rows.map(row => this.mapRowToMCPServer(row))
   }
 
-  getEnabledMCPServers(): MCPServerConfig[] {
+  getEnabledMCPServers(userId: number): MCPServerConfig[] {
     const rows = this.db
-      .prepare('SELECT * FROM mcp_servers WHERE enabled = 1 ORDER BY created_at DESC')
-      .all() as any[]
+      .prepare('SELECT * FROM mcp_servers WHERE user_id = ? AND enabled = 1 ORDER BY created_at DESC')
+      .all(userId) as any[]
 
     return rows.map(row => this.mapRowToMCPServer(row))
   }
 
-  getMCPServer(id: string): MCPServerConfig | null {
+  getMCPServer(userId: number, id: string): MCPServerConfig | null {
     const row = this.db
-      .prepare('SELECT * FROM mcp_servers WHERE id = ?')
-      .get(id) as any
+      .prepare('SELECT * FROM mcp_servers WHERE user_id = ? AND id = ?')
+      .get(userId, id) as any
 
     if (!row) return null
 
     return this.mapRowToMCPServer(row)
   }
 
-  saveMCPServer(server: MCPServerConfig): void {
+  saveMCPServer(userId: number, server: MCPServerConfig): void {
     const stmt = this.db.prepare(`
-      INSERT INTO mcp_servers (id, name, type, config, enabled, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO mcp_servers (id, user_id, name, type, config, enabled, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
 
     stmt.run(
       server.id,
+      userId,
       server.name,
       server.type,
       JSON.stringify(server.config),
@@ -120,7 +122,7 @@ export class Repository {
     )
   }
 
-  updateMCPServer(id: string, updates: Partial<MCPServerConfig>): void {
+  updateMCPServer(userId: number, id: string, updates: Partial<MCPServerConfig>): void {
     const fields: string[] = []
     const values: any[] = []
 
@@ -139,30 +141,30 @@ export class Repository {
 
     if (fields.length === 0) return
 
-    values.push(id)
+    values.push(userId, id)
     const stmt = this.db.prepare(`
-      UPDATE mcp_servers SET ${fields.join(', ')} WHERE id = ?
+      UPDATE mcp_servers SET ${fields.join(', ')} WHERE user_id = ? AND id = ?
     `)
     stmt.run(...values)
   }
 
-  deleteMCPServer(id: string): void {
-    this.db.prepare('DELETE FROM mcp_servers WHERE id = ?').run(id)
+  deleteMCPServer(userId: number, id: string): void {
+    this.db.prepare('DELETE FROM mcp_servers WHERE user_id = ? AND id = ?').run(userId, id)
   }
 
   // Chat History Operations
-  saveChatHistory(id: string, messages: any[]): void {
+  saveChatHistory(userId: number, id: string, messages: any[]): void {
     const stmt = this.db.prepare(`
-      INSERT INTO chat_history (id, messages, created_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO chat_history (id, user_id, messages, created_at)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
     `)
-    stmt.run(id, JSON.stringify(messages))
+    stmt.run(id, userId, JSON.stringify(messages))
   }
 
-  getChatHistory(id: string): any[] | null {
+  getChatHistory(userId: number, id: string): any[] | null {
     const row = this.db
-      .prepare('SELECT messages FROM chat_history WHERE id = ?')
-      .get(id) as any
+      .prepare('SELECT messages FROM chat_history WHERE user_id = ? AND id = ?')
+      .get(userId, id) as any
 
     if (!row) return null
     return JSON.parse(row.messages)

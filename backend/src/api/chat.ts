@@ -1,64 +1,61 @@
 import { Request, Response } from 'express'
 import { LLMService } from '../services/llm/LLMService.js'
 import { MCPService } from '../services/mcp/MCPService.js'
+import { ConfigService } from '../services/config/ConfigService.js'
 import { ChatOrchestrator } from '../services/chat/ChatOrchestrator.js'
 import type { ChatRequest, Message } from '../../../shared/types/index.js'
-import { z } from 'zod'
-
-const ChatRequestSchema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.enum(['user', 'assistant', 'system', 'tool']),
-      content: z.string(),
-      tool_calls: z.any().optional(),
-      tool_call_id: z.string().optional()
-    })
-  )
-})
+import { sendValidationError, sendErrorResponse, setupSSEHeaders } from './utils.js'
+import { ChatRequestSchema } from './validation/schemas.js'
 
 export class ChatAPI {
-  private chatOrchestrator: ChatOrchestrator
-
   constructor(
     private llmService: LLMService,
-    private mcpService: MCPService
-  ) {
-    this.chatOrchestrator = new ChatOrchestrator(llmService, mcpService)
-  }
+    private mcpService: MCPService,
+    private configService: ConfigService
+  ) {}
 
   async chat(req: Request, res: Response): Promise<void> {
     try {
+      // Check authentication
+      if (!req.user) {
+        sendErrorResponse(res, 401, 'Not authenticated')
+        return
+      }
+
       // Validate request
       const validation = ChatRequestSchema.safeParse(req.body)
       if (!validation.success) {
-        res.status(400).json({
-          error: 'Invalid request',
-          details: validation.error.errors
-        })
+        sendValidationError(res, validation.error)
         return
       }
 
       const { messages } = validation.data
 
-      // Check if LLM is configured
-      if (!this.llmService.isConfigured()) {
-        res.status(503).json({
-          error: 'LLM service not configured. Please configure via /api/config/llm'
-        })
+      // Load user's LLM configuration
+      const llmConfig = this.configService.getLLMConfig(req.user.userId)
+
+      if (!llmConfig) {
+        sendErrorResponse(
+          res,
+          503,
+          'LLM not configured. Please configure via /api/config/llm'
+        )
         return
       }
 
-      // Get available MCP tools
+      // Configure LLM service with user's config
+      const userLLMService = new LLMService(llmConfig)
+      const chatOrchestrator = new ChatOrchestrator(userLLMService, this.mcpService)
+
+      // Get available MCP tools (user-specific in the future if MCP becomes per-user)
       const mcpTools = this.mcpService.getAllTools()
 
       // Set up SSE headers
-      res.setHeader('Content-Type', 'text/event-stream')
-      res.setHeader('Cache-Control', 'no-cache')
-      res.setHeader('Connection', 'keep-alive')
+      setupSSEHeaders(res)
 
       // Stream response with tool execution
       try {
-        for await (const chunk of this.chatOrchestrator.chatWithTools(messages, mcpTools)) {
+        for await (const chunk of chatOrchestrator.chatWithTools(messages, mcpTools)) {
           res.write(`data: ${JSON.stringify(chunk)}\n\n`)
         }
         res.write('data: [DONE]\n\n')
@@ -74,9 +71,7 @@ export class ChatAPI {
       }
     } catch (error: any) {
       if (!res.headersSent) {
-        res.status(500).json({
-          error: error.message
-        })
+        sendErrorResponse(res, 500, error.message)
       }
     }
   }

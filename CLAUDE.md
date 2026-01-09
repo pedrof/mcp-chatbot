@@ -230,6 +230,8 @@ export function asyncHandler(fn: (req: Request, res: Response) => Promise<void>)
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` and customize the values:
+
 ```bash
 # Required - at least 32 characters
 APP_SECRET=your-super-secure-secret-key-here-minimum-32-chars
@@ -238,7 +240,43 @@ APP_SECRET=your-super-secure-secret-key-here-minimum-32-chars
 PORT=3000
 FRONTEND_URL=http://localhost:5173
 NODE_ENV=development
+DATABASE_PATH=/app/data/config.db
+TZ=America/New_York
+
+# Air-Gap Network Configuration (Optional)
+# For internal npm registries behind corporate firewalls
+NPM_CONFIG_REGISTRY=https://registry.npmjs.org/
+NPM_CONFIG_STRICT_SSL=true
 ```
+
+### Air-Gap Network Setup
+
+For environments without internet access or with internal npm registries:
+
+1. **Configure NPM Registry** in `.env`:
+   ```bash
+   NPM_CONFIG_REGISTRY=http://nexus.company.com:8081/repository/npm-proxy/
+   NPM_CONFIG_STRICT_SSL=false
+   ```
+
+2. **Ensure Required Packages** are available in your internal registry:
+   - `@modelcontextprotocol/sdk`
+   - `@modelcontextprotocol/server-filesystem` (if using filesystem MCP)
+   - Any other MCP servers you plan to use with `npx`
+
+3. **How It Works**:
+   - Build time: Used during `npm install` in Dockerfiles
+   - Runtime: Used by `npx` commands in MCP stdio server configurations
+   - Environment variables are passed from `.env` to containers via `docker-compose.yml`
+
+4. **Testing Registry Configuration**:
+   ```bash
+   # Inside backend container
+   podman exec -it mcp-chatbot-backend sh
+   npm config get registry
+   ```
+
+See `.env.example` for comprehensive configuration options including scoped package registries and authentication tokens.
 
 ## Common Tasks
 

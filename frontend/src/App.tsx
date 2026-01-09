@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { ChatInterface } from './components/chat/ChatInterface'
 import { ConfigPanel } from './components/config/ConfigPanel'
 import { About } from './components/common/About'
 import { ToolDiscoveryPanel } from './components/discovery/ToolDiscoveryPanel'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthPage } from './components/auth/AuthPage'
 import { useHealthCheck } from './hooks/useConfig'
+import { apiClient } from './services/api'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -20,6 +23,26 @@ const queryClient = new QueryClient({
 function AppContent() {
   const [currentView, setCurrentView] = useState<'chat' | 'config' | 'discovery' | 'about'>('chat')
   const { data: health } = useHealthCheck()
+  const { user, token, logout, isLoading } = useAuth()
+
+  // Update API client token when auth changes
+  useEffect(() => {
+    apiClient.setToken(token)
+  }, [token])
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return (
+      <div className="app" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ color: '#00ffff', fontSize: '1.2rem' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  // Show login page if not authenticated
+  if (!user) {
+    return <AuthPage />
+  }
 
   return (
     <div className="app">
@@ -48,6 +71,12 @@ function AppContent() {
           <button onClick={() => setCurrentView('about')} className={currentView === 'about' ? 'active' : ''}>
             About
           </button>
+          <div className="user-profile">
+            <span className="username">👤 {user.username}</span>
+            <button onClick={logout} className="logout-button" title="Logout">
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
@@ -77,9 +106,11 @@ function AppContent() {
 export function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AppContent />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AppContent />
+        </QueryClientProvider>
+      </AuthProvider>
     </ErrorBoundary>
   )
 }

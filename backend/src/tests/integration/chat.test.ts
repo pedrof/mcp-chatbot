@@ -170,7 +170,7 @@ describe('Chat Integration Tests', () => {
 
       expect(res.statusCode).toBe(400)
       const data = JSON.parse(res.getData())
-      expect(data.error).toBe('Invalid request')
+      expect(data.error).toBe('Validation failed')
     })
 
     it('should handle LLM errors gracefully', async () => {

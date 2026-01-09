@@ -6,14 +6,40 @@ import type {
   HealthCheckResult,
   AppConfig
 } from '../../../shared/types'
+import {
+  HealthCheckResultValidator,
+  AppConfigValidator,
+  MCPServerConfigValidator,
+  StreamChunkValidator
+} from '../../../shared/types/validators'
+import { z } from 'zod'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 export class APIClient {
   private baseURL: string
+  private token: string | null = null
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL
+    // Load token from localStorage on init
+    this.token = localStorage.getItem('auth_token')
+  }
+
+  setToken(token: string | null) {
+    this.token = token
+  }
+
+  private getHeaders(additionalHeaders: HeadersInit = {}): HeadersInit {
+    const headers: HeadersInit = {
+      ...additionalHeaders
+    }
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`
+    }
+
+    return headers
   }
 
   // Health Check
@@ -22,22 +48,26 @@ export class APIClient {
     if (!response.ok) {
       throw new Error('Health check failed')
     }
-    return response.json()
+    const data = await response.json()
+    return HealthCheckResultValidator.parse(data)
   }
 
   // Configuration
   async getConfig(): Promise<AppConfig> {
-    const response = await fetch(`${this.baseURL}/config`)
+    const response = await fetch(`${this.baseURL}/config`, {
+      headers: this.getHeaders()
+    })
     if (!response.ok) {
       throw new Error('Failed to fetch config')
     }
-    return response.json()
+    const data = await response.json()
+    return AppConfigValidator.parse(data)
   }
 
   async updateLLMConfig(config: LLMConfig): Promise<void> {
     const response = await fetch(`${this.baseURL}/config/llm`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(config)
     })
     if (!response.ok) {
@@ -51,18 +81,23 @@ export class APIClient {
   }
 
   async getMCPServers(): Promise<MCPServerConfig[]> {
-    const response = await fetch(`${this.baseURL}/config/mcp`)
+    const response = await fetch(`${this.baseURL}/config/mcp`, {
+      headers: this.getHeaders()
+    })
     if (!response.ok) {
       throw new Error('Failed to fetch MCP servers')
     }
     const data = await response.json()
-    return data.servers
+    const validated = z.object({
+      servers: z.array(MCPServerConfigValidator)
+    }).parse(data)
+    return validated.servers
   }
 
   async addMCPServer(server: MCPServerRequest): Promise<MCPServerConfig> {
     const response = await fetch(`${this.baseURL}/config/mcp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(server)
     })
     if (!response.ok) {
@@ -70,12 +105,16 @@ export class APIClient {
       throw new Error(error.error || 'Failed to add MCP server')
     }
     const data = await response.json()
-    return data.server
+    const validated = z.object({
+      server: MCPServerConfigValidator
+    }).parse(data)
+    return validated.server
   }
 
   async deleteMCPServer(id: string): Promise<void> {
     const response = await fetch(`${this.baseURL}/config/mcp/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: this.getHeaders()
     })
     if (!response.ok) {
       throw new Error('Failed to delete MCP server')
@@ -85,7 +124,7 @@ export class APIClient {
   async toggleMCPServer(id: string, enabled: boolean): Promise<void> {
     const response = await fetch(`${this.baseURL}/config/mcp/${id}/toggle`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ enabled })
     })
     if (!response.ok) {
@@ -102,7 +141,7 @@ export class APIClient {
   }> {
     const response = await fetch(`${this.baseURL}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ messages })
     })
 
@@ -134,9 +173,10 @@ export class APIClient {
             }
             try {
               const chunk = JSON.parse(data)
-              yield chunk
+              const validated = StreamChunkValidator.parse(chunk)
+              yield validated
             } catch (e) {
-              console.error('Failed to parse SSE data:', data)
+              console.error('Failed to parse or validate SSE data:', data, e)
             }
           }
         }

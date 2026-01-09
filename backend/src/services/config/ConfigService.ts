@@ -6,28 +6,29 @@ export class ConfigService {
   constructor(private repository: Repository) {}
 
   // LLM Configuration
-  getLLMConfig(): LLMConfig | null {
-    return this.repository.getLLMConfig()
+  getLLMConfig(userId: number): LLMConfig | null {
+    return this.repository.getLLMConfig(userId)
   }
 
-  saveLLMConfig(config: LLMConfig): void {
-    this.repository.saveLLMConfig(config)
+  saveLLMConfig(userId: number, config: LLMConfig): void {
+    this.repository.saveLLMConfig(userId, config)
   }
 
   // MCP Server Configuration
-  getAllMCPServers(): MCPServerConfig[] {
-    return this.repository.getAllMCPServers()
+  getAllMCPServers(userId: number): MCPServerConfig[] {
+    return this.repository.getAllMCPServers(userId)
   }
 
-  getEnabledMCPServers(): MCPServerConfig[] {
-    return this.repository.getEnabledMCPServers()
+  getEnabledMCPServers(userId: number): MCPServerConfig[] {
+    return this.repository.getEnabledMCPServers(userId)
   }
 
-  getMCPServer(id: string): MCPServerConfig | null {
-    return this.repository.getMCPServer(id)
+  getMCPServer(userId: number, id: string): MCPServerConfig | null {
+    return this.repository.getMCPServer(userId, id)
   }
 
   addMCPServer(
+    userId: number,
     name: string,
     type: 'stdio' | 'http',
     config: any
@@ -41,19 +42,19 @@ export class ConfigService {
       createdAt: new Date().toISOString()
     }
 
-    this.repository.saveMCPServer(server)
+    this.repository.saveMCPServer(userId, server)
     return server
   }
 
-  updateMCPServer(id: string, updates: Partial<MCPServerConfig>): void {
-    this.repository.updateMCPServer(id, updates)
+  updateMCPServer(userId: number, id: string, updates: Partial<MCPServerConfig>): void {
+    this.repository.updateMCPServer(userId, id, updates)
   }
 
-  deleteMCPServer(id: string): void {
-    this.repository.deleteMCPServer(id)
+  deleteMCPServer(userId: number, id: string): void {
+    this.repository.deleteMCPServer(userId, id)
   }
 
-  toggleMCPServer(id: string, enabled: boolean): void {
-    this.repository.updateMCPServer(id, { enabled })
+  toggleMCPServer(userId: number, id: string, enabled: boolean): void {
+    this.repository.updateMCPServer(userId, id, { enabled })
   }
 }

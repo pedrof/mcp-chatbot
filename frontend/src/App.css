@@ -1358,3 +1358,53 @@ form button[type="submit"]:disabled {
     padding: 0.375rem 0.75rem;
   }
 }
+
+/* ============================================
+   User Profile & Authentication
+   ============================================ */
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.375rem 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.username {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.logout-button {
+  padding: 0.375rem 0.875rem !important;
+  background: rgba(255, 77, 77, 0.2) !important;
+  border: 1px solid rgba(255, 77, 77, 0.4) !important;
+  color: #ff6b6b !important;
+  font-size: 0.75rem !important;
+}
+
+.logout-button:hover {
+  background: rgba(255, 77, 77, 0.3) !important;
+  border-color: #ff6b6b !important;
+  box-shadow: 0 0 10px rgba(255, 77, 77, 0.4) !important;
+}
+
+@media (max-width: 768px) {
+  .user-profile {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .username {
+    font-size: 0.75rem;
+  }
+
+  .logout-button {
+    padding: 0.25rem 0.625rem !important;
+    font-size: 0.7rem !important;
+  }
+}

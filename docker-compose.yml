@@ -19,6 +19,9 @@ services:
       - FRONTEND_URL=http://localhost:5173
       - DATABASE_PATH=/app/data/config.db
       - TZ=America/New_York
+      # NPM Registry Configuration for Air-Gap Networks
+      - NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}
+      - NPM_CONFIG_STRICT_SSL=${NPM_CONFIG_STRICT_SSL:-true}
     restart: unless-stopped
     networks:
       - mcp-network
