@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import path from 'path'
 import fs from 'fs'
+import bcrypt from 'bcrypt'
 
 export function initializeDatabase(dbPath: string): Database.Database {
   // Ensure directory exists
@@ -81,16 +82,18 @@ export function initializeDatabase(dbPath: string): Database.Database {
 
 function checkIfMigrationNeeded(db: Database.Database): boolean {
   try {
-    // Check if users table exists
-    const result = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get()
-    return !result // If users table doesn't exist, we need to migrate
+    // Check if old llm_config table exists (without user_id column)
+    const oldLLMConfig = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='llm_config'").get()
+    const usersTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get()
+
+    // Migration is needed if we have old tables but no users table
+    return oldLLMConfig && !usersTable
   } catch {
     return false
   }
 }
 
 function migrateToMultiTenant(db: Database.Database): void {
-  const bcrypt = require('bcrypt')
 
   // Start transaction
   db.exec('BEGIN TRANSACTION')
@@ -118,8 +121,13 @@ function migrateToMultiTenant(db: Database.Database): void {
     console.log(`Created default admin user (username: admin, password: admin123)`)
     console.log('IMPORTANT: Please change the default password after first login!')
 
-    // Migrate llm_config
-    const oldLLMConfig = db.prepare('SELECT * FROM llm_config WHERE id = 1').get() as any
+    // Migrate llm_config - check if table exists first
+    let oldLLMConfig: any = null
+    try {
+      oldLLMConfig = db.prepare('SELECT * FROM llm_config WHERE id = 1').get() as any
+    } catch (error) {
+      console.log('No old llm_config table found, skipping migration')
+    }
 
     if (oldLLMConfig) {
       // Rename old table
@@ -162,8 +170,13 @@ function migrateToMultiTenant(db: Database.Database): void {
       console.log('Migrated LLM config to admin user')
     }
 
-    // Migrate mcp_servers
-    const oldMCPServers = db.prepare('SELECT COUNT(*) as count FROM mcp_servers').get() as any
+    // Migrate mcp_servers - check if table exists first
+    let oldMCPServers: any = { count: 0 }
+    try {
+      oldMCPServers = db.prepare('SELECT COUNT(*) as count FROM mcp_servers').get() as any
+    } catch (error) {
+      console.log('No old mcp_servers table found, skipping migration')
+    }
 
     if (oldMCPServers.count > 0) {
       // Add user_id column with default value
@@ -200,8 +213,13 @@ function migrateToMultiTenant(db: Database.Database): void {
       console.log(`Migrated ${oldMCPServers.count} MCP servers to admin user`)
     }
 
-    // Migrate chat_history
-    const oldChatHistory = db.prepare('SELECT COUNT(*) as count FROM chat_history').get() as any
+    // Migrate chat_history - check if table exists first
+    let oldChatHistory: any = { count: 0 }
+    try {
+      oldChatHistory = db.prepare('SELECT COUNT(*) as count FROM chat_history').get() as any
+    } catch (error) {
+      console.log('No old chat_history table found, skipping migration')
+    }
 
     if (oldChatHistory.count > 0) {
       db.exec(`ALTER TABLE chat_history ADD COLUMN user_id INTEGER DEFAULT ${adminUserId}`)
