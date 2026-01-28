@@ -7,13 +7,18 @@ metadata:
     # Use Let's Encrypt production issuer
     cert-manager.io/cluster-issuer: letsencrypt-prod
 
+    # nginx-ingress timeout settings for SSE/chat streaming
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
     # Security headers
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "X-Frame-Options: SAMEORIGIN";
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "X-XSS-Protection: 1; mode=block";
 spec:
-  ingressClassName: cilium
+  ingressClassName: nginx-local
   tls:
     - hosts:
         - mcp-chatbot.local.shadyknollcave.io
