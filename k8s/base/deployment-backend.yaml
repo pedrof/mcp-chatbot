@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-chatbot-backend
+  namespace: mcp-chatbot
+  labels:
+    app: mcp-chatbot-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-chatbot-backend
+  template:
+    metadata:
+      labels:
+        app: mcp-chatbot-backend
+    spec:
+      containers:
+        - name: backend
+          image: git.shadyknollcave.io/micro/mcp-chatbot:backend-latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            # Non-sensitive config from ConfigMap
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-chatbot-config
+                  key: PORT
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-chatbot-config
+                  key: NODE_ENV
+            - name: DATABASE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-chatbot-config
+                  key: DATABASE_PATH
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-chatbot-config
+                  key: TZ
+            - name: FRONTEND_URL
+              value: "https://mcp-chatbot.local.shadyknollcave.io"
+            - name: MCP_HUE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: mcp-chatbot-config
+                  key: MCP_HUE_URL
+
+            # Sensitive config from Secret
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-chatbot-secret
+                  key: APP_SECRET
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mcp-chatbot-secret
+                  key: JWT_SECRET
+
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mcp-chatbot-data

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-chatbot-frontend
+  namespace: mcp-chatbot
+  labels:
+    app: mcp-chatbot-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-chatbot-frontend
+  template:
+    metadata:
+      labels:
+        app: mcp-chatbot-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: git.shadyknollcave.io/micro/mcp-chatbot:frontend-latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

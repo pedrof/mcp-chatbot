@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-chatbot
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project this application belongs to
+  project: default
+
+  # Source of the application manifests
+  source:
+    # Git repository URL
+    repoURL: https://git.shadyknollcave.io/micro/mcp-chatbot.git
+
+    # Target branch (use main for production)
+    targetRevision: main
+
+    # Path to the Kustomize configuration
+    path: k8s/overlays/production
+
+    # Kustomize options
+    kustomize:
+      # Additional images to override
+      images:
+        - git.shadyknollcave.io/micro/mcp-chatbot:backend-1.0.0
+        - git.shadyknollcave.io/micro/mcp-chatbot:frontend-1.0.0
+
+  # Destination cluster and namespace
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mcp-chatbot
+
+  # Sync policy
+  syncPolicy:
+    # Automated sync
+    automated:
+      # Automatically prune resources
+      prune: true
+      # Automatically self-heal
+      selfHeal: true
+      # Allow empty manifests
+      allowEmpty: false
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+
+    # Retry strategy
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Revision history limit
+  revisionHistoryLimit: 10
+
+  # Application health checks
+  healthCheck:
+    # Number of seconds to wait before checking health
+    timeout: 300

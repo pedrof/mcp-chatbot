@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-chatbot-frontend
+  namespace: mcp-chatbot
+  labels:
+    app: mcp-chatbot-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: mcp-chatbot-frontend

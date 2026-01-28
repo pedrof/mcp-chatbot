@@ -344,6 +344,52 @@ tar -czf mcp-chatbot.tar.gz \
 scp mcp-chatbot.tar.gz user@airgap-system:/opt/
 ```
 
+## Kubernetes Deployment (GitOps)
+
+For production deployment to K3s Kubernetes cluster using ArgoCD and Gitea:
+
+**Quick Start:**
+```bash
+# See DEPLOYMENT_QUICKSTART.md for 5-minute deployment guide
+cat DEPLOYMENT_QUICKSTART.md
+```
+
+**Full Documentation:**
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete GitOps deployment guide
+- [DEPLOYMENT_QUICKSTART.md](DEPLOYMENT_QUICKSTART.md) - Fast-track deployment
+
+**Key Features:**
+- GitOps with ArgoCD
+- Sealed Secrets for sensitive data
+- Cilium Ingress with Let's Encrypt TLS
+- Separate backend/frontend deployments
+- Persistent storage for SQLite database
+- MCP server communication via internal cluster DNS
+- Automated builds and deployments via Makefile
+
+**Quick Deploy:**
+```bash
+# Build and push container images
+make deploy
+
+# Create sealed secret
+make kube-create-secret
+
+# Deploy via ArgoCD
+kubectl apply -f argocd/mcp-chatbot-application.yaml
+argocd app sync mcp-chatbot
+```
+
+**Architecture:**
+```
+Cilium Ingress (10.10.10.200)
+    ├─ / → Frontend (Nginx + React)
+    └─ /api → Backend (Express.js)
+        └─ MCP Servers (internal cluster DNS)
+```
+
+**Access:** https://mcp-chatbot.local.shadyknollcave.io
+
 ## Troubleshooting
 
 ### Backend won't start

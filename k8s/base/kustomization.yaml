@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mcp-chatbot
+
+# Common labels applied to all resources
+commonLabels:
+  app: mcp-chatbot
+  environment: production
+
+# Resources to deploy
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - sealed-secret.yaml
+  - pvc.yaml
+  - deployment-backend.yaml
+  - deployment-frontend.yaml
+  - service-backend.yaml
+  - service-frontend.yaml
+  - ingress.yaml
+
+# Images to replace (overrides)
+images:
+  - name: git.shadyknollcave.io/micro/mcp-chatbot:backend-latest
+    newName: git.shadyknollcave.io/micro/mcp-chatbot
+    newTag: backend-1.0.0
+  - name: git.shadyknollcave.io/micro/mcp-chatbot:frontend-latest
+    newName: git.shadyknollcave.io/micro/mcp-chatbot
+    newTag: frontend-1.0.0

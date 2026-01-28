@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-chatbot-config
+  namespace: mcp-chatbot
+data:
+  # Backend Configuration
+  PORT: "3000"
+  NODE_ENV: "production"
+  DATABASE_PATH: "/app/data/config.db"
+  TZ: "America/New_York"
+
+  # Frontend Configuration (will be used by nginx)
+  # API URL is proxied through nginx, so we use relative path
+  VITE_API_URL: "/api"
+
+  # MCP Server Communication (internal cluster DNS)
+  # Example: mcphue MCP server
+  MCP_HUE_URL: "http://mcphue.mcphue.svc.cluster.local:8080"
