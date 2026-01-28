@@ -24,8 +24,6 @@ resources:
 # Images to replace (overrides)
 images:
   - name: git.shadyknollcave.io/micro/mcp-chatbot:backend-latest
-    newName: git.shadyknollcave.io/micro/mcp-chatbot
-    newTag: backend-1.0.0
+    newName: git.shadyknollcave.io/micro/mcp-chatbot:backend-1.0.0
   - name: git.shadyknollcave.io/micro/mcp-chatbot:frontend-latest
-    newName: git.shadyknollcave.io/micro/mcp-chatbot
-    newTag: frontend-1.0.0
+    newName: git.shadyknollcave.io/micro/mcp-chatbot:frontend-1.0.0
