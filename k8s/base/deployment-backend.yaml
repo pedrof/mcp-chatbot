@@ -53,17 +53,12 @@ spec:
                   name: mcp-chatbot-config
                   key: MCP_HUE_URL
 
-            # Sensitive config from Secret
+            # Sensitive config from Secret (TODO: Replace with sealed-secret.yaml)
+            # For now, using placeholder - CHANGE THIS IN PRODUCTION!
             - name: APP_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: mcp-chatbot-secret
-                  key: APP_SECRET
+              value: "change-this-to-a-secure-random-secret-key-at-least-32-chars"
             - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: mcp-chatbot-secret
-                  key: JWT_SECRET
+              value: "change-this-to-another-secure-random-secret-key"
 
           volumeMounts:
             - name: data

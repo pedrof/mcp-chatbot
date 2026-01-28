@@ -15,7 +15,7 @@ spec:
     repoURL: https://git.shadyknollcave.io/micro/mcp-chatbot.git
 
     # Target branch (use main for production)
-    targetRevision: main
+    targetRevision: multitenant
 
     # Path to the Kustomize configuration
     path: k8s/overlays/production
@@ -59,8 +59,3 @@ spec:
 
   # Revision history limit
   revisionHistoryLimit: 10
-
-  # Application health checks
-  healthCheck:
-    # Number of seconds to wait before checking health
-    timeout: 300

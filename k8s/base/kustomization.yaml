@@ -4,15 +4,16 @@ kind: Kustomization
 namespace: mcp-chatbot
 
 # Common labels applied to all resources
-commonLabels:
-  app: mcp-chatbot
-  environment: production
+labels:
+  - pairs:
+      app: mcp-chatbot
+      environment: production
 
 # Resources to deploy
 resources:
   - namespace.yaml
   - configmap.yaml
-  - sealed-secret.yaml
+  # - sealed-secret.yaml  # TODO: Create sealed secret using kubeseal
   - pvc.yaml
   - deployment-backend.yaml
   - deployment-frontend.yaml
