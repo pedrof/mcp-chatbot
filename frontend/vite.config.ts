@@ -12,6 +12,10 @@ export default defineConfig({
       '.local.shadyknollcave.io',
       '.shadyknollcave.io'
     ],
+    // Allow Vite to access files in parent directory
+    fs: {
+      allow: ['..']
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY || 'http://backend:3000',
