@@ -20,13 +20,6 @@ spec:
     # Path to the Kustomize configuration
     path: k8s/overlays/production
 
-    # Kustomize options
-    kustomize:
-      # Additional images to override
-      images:
-        - git.shadyknollcave.io/micro/mcp-chatbot:backend-1.0.0
-        - git.shadyknollcave.io/micro/mcp-chatbot:frontend-1.0.0
-
   # Destination cluster and namespace
   destination:
     server: https://kubernetes.default.svc

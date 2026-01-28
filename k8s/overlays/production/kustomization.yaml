@@ -9,39 +9,7 @@ resources:
 
 # Production patches
 patches:
-  # Backend: Set correct image
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: mcp-chatbot-backend
-      spec:
-        template:
-          spec:
-            containers:
-              - name: backend
-                image: git.shadyknollcave.io/micro/mcp-chatbot:backend-1.0.0
-    target:
-      kind: Deployment
-      name: mcp-chatbot-backend
-
-  # Frontend: Set correct image
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: mcp-chatbot-frontend
-      spec:
-        template:
-          spec:
-            containers:
-              - name: frontend
-                image: git.shadyknollcave.io/micro/mcp-chatbot:frontend-1.0.0
-    target:
-      kind: Deployment
-      name: mcp-chatbot-frontend
-
-  # Backend: Scale to 2 replicas
+  # Backend: Scale and set resources
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
@@ -49,29 +17,6 @@ patches:
         name: mcp-chatbot-backend
       spec:
         replicas: 2
-    target:
-      kind: Deployment
-      name: mcp-chatbot-backend
-
-  # Frontend: Scale to 2 replicas
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: mcp-chatbot-frontend
-      spec:
-        replicas: 2
-    target:
-      kind: Deployment
-      name: mcp-chatbot-frontend
-
-  # Backend: Increase resource limits for production
-  - patch: |-
-      apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: mcp-chatbot-backend
-      spec:
         template:
           spec:
             containers:
@@ -87,13 +32,14 @@ patches:
       kind: Deployment
       name: mcp-chatbot-backend
 
-  # Frontend: Increase resource limits for production
+  # Frontend: Scale and set resources
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
       metadata:
         name: mcp-chatbot-frontend
       spec:
+        replicas: 2
         template:
           spec:
             containers:
