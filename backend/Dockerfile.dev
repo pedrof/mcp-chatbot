@@ -1,15 +1,19 @@
-# Development Dockerfile for Backend
+# Development Dockerfile for Backend (Kubernetes)
 FROM node:22-alpine
 
-WORKDIR /app
+# Create workspace directory structure
+RUN mkdir -p /workspace/backend
+
+# Copy ONLY backend package files first (before root package.json)
+COPY backend/package.json backend/package-lock.json* /workspace/backend/
+
+# Set working directory to /workspace/backend
+WORKDIR /workspace/backend
 
 # Install dependencies for better-sqlite3 compilation and timezone support
 # libc6-compat: Required for better-sqlite3 (provides ld-linux-x86-64.so.2 loader)
 # libstdc++: Required for better-sqlite3 C++ standard library
 RUN apk add --no-cache python3 make g++ tzdata libc6-compat libstdc++
-
-# Copy package files
-COPY package.json ./
 
 # Install dependencies (including dev dependencies)
 RUN npm install
@@ -17,8 +21,11 @@ RUN npm install
 # Rebuild better-sqlite3 from source for Alpine musl compatibility
 RUN npm rebuild better-sqlite3
 
-# Copy source code
-COPY . .
+# NOW copy the entire repo for correct import structure
+COPY . /workspace/
+
+# Copy backend source code
+COPY backend/ /workspace/backend/
 
 # Expose port
 EXPOSE 3000
