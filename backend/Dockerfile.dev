@@ -4,7 +4,9 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install dependencies for better-sqlite3 compilation and timezone support
-RUN apk add --no-cache python3 make g++ tzdata
+# libc6-compat: Required for better-sqlite3 (provides ld-linux-x86-64.so.2 loader)
+# libstdc++: Required for better-sqlite3 C++ standard library
+RUN apk add --no-cache python3 make g++ tzdata libc6-compat libstdc++
 
 # Copy package files
 COPY package.json ./

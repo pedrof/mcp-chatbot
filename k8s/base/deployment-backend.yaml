@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: git.shadyknollcave.io/micro/mcp-chatbot-backend:1.0.1
+          image: git.shadyknollcave.io/micro/mcp-chatbot-backend:1.0.2
           imagePullPolicy: Always
           ports:
             - name: http
