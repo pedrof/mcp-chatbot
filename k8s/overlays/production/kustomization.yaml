@@ -10,13 +10,15 @@ resources:
 # Production patches
 patches:
   # Backend: Scale and set resources
+  # NOTE: replicas set to 1 due to ReadWriteOnce PVC constraint
+  # SQLite with RWO PVC can only be mounted by one pod at a time
   - patch: |-
       apiVersion: apps/v1
       kind: Deployment
       metadata:
         name: mcp-chatbot-backend
       spec:
-        replicas: 2
+        replicas: 1
         template:
           spec:
             containers:
